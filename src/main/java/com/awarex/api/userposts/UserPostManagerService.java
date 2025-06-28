@@ -26,10 +26,15 @@ import com.google.gson.reflect.TypeToken;
 
 @Path("/userposts")
 public class UserPostManagerService {
+	Type userType = new TypeToken<User>() {
+	}.getType();
+
 	Type usersType = new TypeToken<List<User>>() {
 	}.getType();
 	Type userPostsType = new TypeToken<List<UserPost>>() {
 	}.getType();
+
+	Gson gson = new Gson();
 
 	String usersAPIUrl = AwarexEnvironment.getInstance().backendAPIBaseURI + "users";
 	String userPostsAPIUrl = AwarexEnvironment.getInstance().backendAPIBaseURI + "posts";
@@ -39,27 +44,45 @@ public class UserPostManagerService {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("create")
 	public String writeAPost(UserPostPayload payload) {
-		List<User> userInfo = new Gson().fromJson(RestAPIHelper.invokeGetAPI(usersAPIUrl + "?email=" + payload.email),
-				usersType);
+		try {
+			List<User> userInfo = gson.fromJson(RestAPIHelper.invokeGetAPI(usersAPIUrl + "?email=" + payload.email),
+					usersType);
 
-		int userId = 0;
+			int userId = 0;
 
-		if (userInfo != null && userInfo.size() > 0) {
-			// user exists. add the post.
-			userId = userInfo.get(0).getUserId();
-		} else {
-			// TODO create user
+			if (userInfo != null && userInfo.size() > 0) {
+				// user exists. add the post.
+				userId = userInfo.get(0).getUserId();
+			} else {
+				// create user
+				String userCreateResponse = RestAPIHelper.invokePostAPI(usersAPIUrl,
+						Entity.json(payload.toUserPayload()));
+				System.out.println(userCreateResponse);
+				List<User> users = gson.fromJson(userCreateResponse, usersType);
+
+				System.out.println(gson.toJson(users));
+
+				userId = users.get(0).id;
+			}
+
+			if (userId > 0) {
+				String response = RestAPIHelper.invokePostAPI(usersAPIUrl + "/" + userId + "/posts",
+						Entity.json(payload));
+				return response;
+			}
+
+			Map responseMap = new HashMap();
+			responseMap.put("message", "user does not exist");
+
+			return gson.toJson(responseMap);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Map responseMap = new HashMap();
+			responseMap.put("developerErrorMessage", "Error calling API");
+			responseMap.put("errors", e.getLocalizedMessage());
+			return gson.toJson(responseMap);
+
 		}
-
-		if (userId > 0) {
-			String response = RestAPIHelper.invokePostAPI(usersAPIUrl + "/" + userId + "/posts", Entity.json(payload));
-			return response;
-		}
-
-		Map responseMap = new HashMap();
-		responseMap.put("message", "user does not exist");
-
-		return new Gson().toJson(responseMap);
 
 	}
 
@@ -70,15 +93,15 @@ public class UserPostManagerService {
 		Map responseMap = new HashMap();
 		responseMap.put("message", "Here is your Post");
 
-		return new Gson().toJson(responseMap);
+		return gson.toJson(responseMap);
 	}
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("get")
 	public String getAllPosts() {
-		List responseRows = new Gson().fromJson(RestAPIHelper.invokeGetAPI(userPostsAPIUrl), List.class);
-		return new Gson().toJson(responseRows);
+		List responseRows = gson.fromJson(RestAPIHelper.invokeGetAPI(userPostsAPIUrl), List.class);
+		return gson.toJson(responseRows);
 	}
 
 	@GET
@@ -86,12 +109,12 @@ public class UserPostManagerService {
 	@Path("getUserPostDetails")
 	public String getUserPostDetails() {
 		// TODO do multiple iterations to get all users? pagination?
-		List<User> users = new Gson().fromJson(RestAPIHelper.invokeGetAPI(usersAPIUrl), usersType);
+		List<User> users = gson.fromJson(RestAPIHelper.invokeGetAPI(usersAPIUrl), usersType);
 
 		Map<Integer, User> userMap = users.stream().collect(Collectors.toMap(User::getUserId, user -> user));
 
 		// TODO do multiple iterations to get all posts? pagination?
-		List<UserPost> userPosts = new Gson().fromJson(RestAPIHelper.invokeGetAPI(userPostsAPIUrl), userPostsType);
+		List<UserPost> userPosts = gson.fromJson(RestAPIHelper.invokeGetAPI(userPostsAPIUrl), userPostsType);
 
 		Map<Integer, UserPost> userPostMap = userPosts.stream()
 				.collect(Collectors.toMap(UserPost::getPostId, user -> user));
@@ -129,7 +152,7 @@ public class UserPostManagerService {
 		responseMap.put("usersWithPosts", usersWithPosts);
 		responseMap.put("postsWithoutUsers", postsWithoutUsers);
 
-		return new Gson().toJson(responseMap);
+		return gson.toJson(responseMap);
 	}
 
 }

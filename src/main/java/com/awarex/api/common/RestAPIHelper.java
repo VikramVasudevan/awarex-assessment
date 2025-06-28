@@ -12,14 +12,17 @@ public class RestAPIHelper {
 	public static String invokeGetAPI(String uri) {
 		Client client = ClientBuilder.newClient();
 		WebTarget target = client.target(uri);
-		Response response = target.request().get();
+		Response response = target.request().header("Authorization", "Bearer " + accessToken).get();
 		return response.readEntity(String.class);
 	}
 
-	public static String invokePostAPI(String uri, Entity payload) {
+	public static String invokePostAPI(String uri, Entity payload) throws AwarexAPIException {
 		Client client = ClientBuilder.newClient();
 		WebTarget target = client.target(uri);
 		Response response = target.request().header("Authorization", "Bearer " + accessToken).post(payload);
-		return response.readEntity(String.class);
+		if (response.getStatus() == 200)
+			return response.readEntity(String.class);
+		else
+			throw new AwarexAPIException(response.readEntity(String.class));
 	}
 }
