@@ -70,6 +70,11 @@ public class UserPostManagerService {
 		// TODO do multiple iterations to get all posts? pagination?
 		List<UserPost> userPosts = new Gson()
 				.fromJson(RestAPIHelper.invokeGetAPI("https://gorest.co.in/public/v2/posts"), userPostsType);
+
+		Map<Integer, UserPost> userPostMap = userPosts.stream()
+				.collect(Collectors.toMap(UserPost::getPostId, user -> user));
+
+		// Organize posts by user
 		Map<Integer, List<CombinedUserPostModel>> userPostsPerUser = userPosts.stream().map(userPost -> {
 			User user = userMap.get(userPost.user_id);
 			if (user != null) {
@@ -83,11 +88,24 @@ public class UserPostManagerService {
 					return list;
 				})));
 
+		// Calculate users without posts
+		int usersWithoutPosts = users.stream().filter(user -> {
+			return userPosts.stream().noneMatch(userPost -> userPost.user_id == user.id);
+		}).collect(Collectors.toList()).size();
+
+		// Calculate users with posts
+		int usersWithPosts = users.size() - usersWithoutPosts;
+
+		// Calculate posts without users
+		int postsWithoutUsers = userPosts.stream().filter(userPost -> {
+			return !userMap.containsKey(userPost.user_id);
+		}).collect(Collectors.toList()).size();
+
 		Map responseMap = new HashMap();
 		responseMap.put("userPosts", userPostsPerUser);
-		responseMap.put("usersWithoutPosts", 100);
-		responseMap.put("usersWithPosts", 125);
-		responseMap.put("postsWithoutUsers", 23);
+		responseMap.put("usersWithoutPosts", usersWithoutPosts);
+		responseMap.put("usersWithPosts", usersWithPosts);
+		responseMap.put("postsWithoutUsers", postsWithoutUsers);
 
 		return new Gson().toJson(responseMap);
 	}
