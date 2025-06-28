@@ -5,30 +5,30 @@ public class CombinedUserPostModel {
 			String gender, String status) {
 		super();
 		this.id = id;
-		this.user_id = user_id;
-		this.title = title;
-		this.body = body;
-		this.name = name;
-		this.email = email;
-		this.gender = gender;
-		this.status = status;
+		this.userId = user_id;
+		this.postTitle = title;
+		this.postBody = body;
+		this.userName = name;
+		this.userEmail = email;
+		this.userGender = gender;
+		this.userStatus = status;
 	}
 
 	public int id;
-	public int user_id;
-	public String title;
-	public String body;
+	public int userId;
+	public String postTitle;
+	public String postBody;
 
-	public String name;
-	public String email;
-	public String gender;
-	public String status;
+	public String userName;
+	public String userEmail;
+	public String userGender;
+	public String userStatus;
 
 	public int getPostId() {
 		return id;
 	}
 
 	public int getUserId() {
-		return user_id;
+		return userId;
 	}
 }

@@ -13,4 +13,8 @@ public class UserPost {
 	public int getUserId() {
 		return user_id;
 	}
+
+	public AwarexUserPost asAwarexUserPost() {
+		return new AwarexUserPost(id, user_id, title, body);
+	}
 }
