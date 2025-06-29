@@ -7,6 +7,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
@@ -118,16 +120,27 @@ public class UserPostManagerService {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("getUserPostDetails")
 	public String getUserPostDetails() {
-		// TODO do multiple iterations to get all users? pagination?
 		try {
-			List<User> users;
-			users = gson.fromJson(RestAPIHelper.invokeGetAPI("Fetch Users API", usersAPIUrl), usersType);
+			ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(2);
+
+			Future<List<User>> usersFuture = executor.submit(() -> {
+				// TODO do multiple iterations to get all users? pagination?
+				List<User> users;
+				users = gson.fromJson(RestAPIHelper.invokeGetAPI("Fetch Users API", usersAPIUrl), usersType);
+				return users;
+			});
+
+			Future<List<UserPost>> userPostsFuture = executor.submit(() -> {
+				// TODO do multiple iterations to get all posts? pagination?
+				List<UserPost> userPosts = gson
+						.fromJson(RestAPIHelper.invokeGetAPI("Fetch User Posts API", userPostsAPIUrl), userPostsType);
+				return userPosts;
+			});
+
+			List<User> users = usersFuture.get();
+			List<UserPost> userPosts = userPostsFuture.get();
 
 			Map<Integer, User> userMap = users.stream().collect(Collectors.toMap(User::getUserId, user -> user));
-
-			// TODO do multiple iterations to get all posts? pagination?
-			List<UserPost> userPosts = gson
-					.fromJson(RestAPIHelper.invokeGetAPI("Fetch User Posts API", userPostsAPIUrl), userPostsType);
 
 			// Organize posts by user
 			Map<Integer, List<CombinedUserPostModel>> userPostsPerUser = userPosts.stream().map(userPost -> {
