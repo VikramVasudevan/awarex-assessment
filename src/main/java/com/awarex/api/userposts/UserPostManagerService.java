@@ -2,6 +2,7 @@ package com.awarex.api.userposts;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +18,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import com.awarex.api.common.AwarexAPIException;
 import com.awarex.api.common.AwarexEnvironment;
@@ -48,9 +51,11 @@ public class UserPostManagerService {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("create")
 	public Response writeAPost(UserPostPayload payload) {
+		String currentlyCallingAPI = "";
 		try {
 			List<User> userInfo = gson.fromJson(
 					RestAPIHelper.invokeGetAPI("Fetch Users API", usersAPIUrl + "?email=" + payload.email), usersType);
+			System.out.println("userInfo = " + gson.toJson(userInfo));
 
 			int userId = 0;
 
@@ -59,10 +64,14 @@ public class UserPostManagerService {
 				userId = userInfo.get(0).getUserId();
 			} else {
 				// create user
-				String userCreateResponse = RestAPIHelper.invokePostAPI("Create User API", usersAPIUrl,
+				currentlyCallingAPI = "/users";
+				Pair<Integer, String> userCreateResponse = RestAPIHelper.invokePostAPI("Create User API", usersAPIUrl,
 						Entity.json(payload.toUserPayload()));
 				System.out.println(userCreateResponse);
-				User user = gson.fromJson(userCreateResponse, userType);
+				if (userCreateResponse.getLeft() > 299) {
+					return Response.status(userCreateResponse.getLeft()).entity(userCreateResponse.getRight()).build();
+				}
+				User user = gson.fromJson(userCreateResponse.getRight(), userType);
 
 				System.out.println(gson.toJson(user));
 
@@ -70,18 +79,22 @@ public class UserPostManagerService {
 			}
 
 			if (userId > 0) {
-				String response = RestAPIHelper.invokePostAPI("Create User Posts API",
+				currentlyCallingAPI = "/posts";
+				Pair<Integer, String> response = RestAPIHelper.invokePostAPI("Create User Posts API",
 						usersAPIUrl + "/" + userId + "/posts", Entity.json(payload));
-				return Response.ok(response).build();
+				System.out.println(response);
+
+				return Response.status(response.getLeft()).entity(response.getRight()).build();
+
 			}
 
 			throw new AwarexAPIException("Unable to create user");
 		} catch (Exception e) {
 			e.printStackTrace();
 			Map responseMap = new HashMap();
-			responseMap.put("developerErrorMessage", "Error calling API");
-			responseMap.put("errors", e.getLocalizedMessage());
-			return Response.status(500).entity(Entity.json(responseMap)).build();
+			responseMap.put("developerErrorMessage", "Errors by " + currentlyCallingAPI + " API");
+			responseMap.put("errors", Arrays.asList(e.getLocalizedMessage()));
+			return Response.status(500).entity(gson.toJson(responseMap)).build();
 		}
 
 	}
