@@ -101,20 +101,20 @@ public class UserPostManagerService {
 
 	}
 
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	@Path("get")
-	public String getAllPosts() {
-		List responseRows = new ArrayList();
-		try {
-			responseRows = gson.fromJson(RestAPIHelper.invokeGetAPI("Fetch User Posts API", userPostsAPIUrl),
-					List.class);
-			return gson.toJson(responseRows);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new WebApplicationException(e.getLocalizedMessage(), 500);
-		}
-	}
+//	@GET
+//	@Produces(MediaType.APPLICATION_JSON)
+//	@Path("get")
+//	public String getAllPosts() {
+//		List responseRows = new ArrayList();
+//		try {
+//			responseRows = gson.fromJson(RestAPIHelper.invokeGetAPI("Fetch User Posts API", userPostsAPIUrl),
+//					List.class);
+//			return gson.toJson(responseRows);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			throw new WebApplicationException(e.getLocalizedMessage(), 500);
+//		}
+//	}
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
