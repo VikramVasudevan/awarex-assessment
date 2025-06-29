@@ -17,4 +17,12 @@ public class AwarexAPIException extends Exception {
 		super(message);
 	}
 
+	public AwarexAPIException(Exception e) {
+		super(e);
+	}
+
+	public AwarexAPIException(String message, Exception e) {
+		super(message, e);
+	}
+
 }

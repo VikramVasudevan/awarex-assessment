@@ -1,6 +1,7 @@
 package com.awarex.api.userposts;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -12,9 +13,12 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import com.awarex.api.common.AwarexAPIException;
 import com.awarex.api.common.AwarexEnvironment;
 import com.awarex.api.common.RestAPIHelper;
 import com.awarex.api.model.CombinedUserPostModel;
@@ -43,10 +47,10 @@ public class UserPostManagerService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("create")
-	public String writeAPost(UserPostPayload payload) {
+	public Response writeAPost(UserPostPayload payload) {
 		try {
-			List<User> userInfo = gson.fromJson(RestAPIHelper.invokeGetAPI(usersAPIUrl + "?email=" + payload.email),
-					usersType);
+			List<User> userInfo = gson.fromJson(
+					RestAPIHelper.invokeGetAPI("Fetch Users API", usersAPIUrl + "?email=" + payload.email), usersType);
 
 			int userId = 0;
 
@@ -55,53 +59,46 @@ public class UserPostManagerService {
 				userId = userInfo.get(0).getUserId();
 			} else {
 				// create user
-				String userCreateResponse = RestAPIHelper.invokePostAPI(usersAPIUrl,
+				String userCreateResponse = RestAPIHelper.invokePostAPI("Create User API", usersAPIUrl,
 						Entity.json(payload.toUserPayload()));
 				System.out.println(userCreateResponse);
-				List<User> users = gson.fromJson(userCreateResponse, usersType);
+				User user = gson.fromJson(userCreateResponse, userType);
 
-				System.out.println(gson.toJson(users));
+				System.out.println(gson.toJson(user));
 
-				userId = users.get(0).id;
+				userId = user.id;
 			}
 
 			if (userId > 0) {
-				String response = RestAPIHelper.invokePostAPI(usersAPIUrl + "/" + userId + "/posts",
-						Entity.json(payload));
-				return response;
+				String response = RestAPIHelper.invokePostAPI("Create User Posts API",
+						usersAPIUrl + "/" + userId + "/posts", Entity.json(payload));
+				return Response.ok(response).build();
 			}
 
-			Map responseMap = new HashMap();
-			responseMap.put("message", "user does not exist");
-
-			return gson.toJson(responseMap);
+			throw new AwarexAPIException("Unable to create user");
 		} catch (Exception e) {
 			e.printStackTrace();
 			Map responseMap = new HashMap();
 			responseMap.put("developerErrorMessage", "Error calling API");
 			responseMap.put("errors", e.getLocalizedMessage());
-			return gson.toJson(responseMap);
-
+			return Response.status(500).entity(Entity.json(responseMap)).build();
 		}
 
 	}
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("find")
-	public String findPost() {
-		Map responseMap = new HashMap();
-		responseMap.put("message", "Here is your Post");
-
-		return gson.toJson(responseMap);
-	}
-
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
 	@Path("get")
 	public String getAllPosts() {
-		List responseRows = gson.fromJson(RestAPIHelper.invokeGetAPI(userPostsAPIUrl), List.class);
-		return gson.toJson(responseRows);
+		List responseRows = new ArrayList();
+		try {
+			responseRows = gson.fromJson(RestAPIHelper.invokeGetAPI("Fetch User Posts API", userPostsAPIUrl),
+					List.class);
+			return gson.toJson(responseRows);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WebApplicationException(e.getLocalizedMessage(), 500);
+		}
 	}
 
 	@GET
@@ -109,50 +106,59 @@ public class UserPostManagerService {
 	@Path("getUserPostDetails")
 	public String getUserPostDetails() {
 		// TODO do multiple iterations to get all users? pagination?
-		List<User> users = gson.fromJson(RestAPIHelper.invokeGetAPI(usersAPIUrl), usersType);
+		try {
+			List<User> users;
+			users = gson.fromJson(RestAPIHelper.invokeGetAPI("Fetch Users API", usersAPIUrl), usersType);
 
-		Map<Integer, User> userMap = users.stream().collect(Collectors.toMap(User::getUserId, user -> user));
+			Map<Integer, User> userMap = users.stream().collect(Collectors.toMap(User::getUserId, user -> user));
 
-		// TODO do multiple iterations to get all posts? pagination?
-		List<UserPost> userPosts = gson.fromJson(RestAPIHelper.invokeGetAPI(userPostsAPIUrl), userPostsType);
+			// TODO do multiple iterations to get all posts? pagination?
+			List<UserPost> userPosts = gson
+					.fromJson(RestAPIHelper.invokeGetAPI("Fetch User Posts API", userPostsAPIUrl), userPostsType);
 
-		Map<Integer, UserPost> userPostMap = userPosts.stream()
-				.collect(Collectors.toMap(UserPost::getPostId, user -> user));
+			// Organize posts by user
+			Map<Integer, List<CombinedUserPostModel>> userPostsPerUser = userPosts.stream().map(userPost -> {
+				User user = userMap.get(userPost.user_id);
+				if (user != null) {
+					return new CombinedUserPostModel(userPost.id, userPost.user_id, userPost.title, userPost.body,
+							user.name, user.email, user.gender, user.status);
+				} else {
+					return new CombinedUserPostModel(userPost.id, userPost.user_id, userPost.title, userPost.body, null,
+							null, null, null);
+				}
+			}).filter(java.util.Objects::nonNull).collect(Collectors.groupingBy(CombinedUserPostModel::getUserId,
+					Collectors.collectingAndThen(Collectors.toList(), list -> {
+						list.sort(Comparator.comparingInt(CombinedUserPostModel::getPostId));
+						return list;
+					})));
 
-		// Organize posts by user
-		Map<Integer, List<CombinedUserPostModel>> userPostsPerUser = userPosts.stream().map(userPost -> {
-			User user = userMap.get(userPost.user_id);
-			if (user != null) {
-				return new CombinedUserPostModel(userPost.id, userPost.user_id, userPost.title, userPost.body,
-						user.name, user.email, user.gender, user.status);
-			}
-			return null;
-		}).filter(java.util.Objects::nonNull).collect(Collectors.groupingBy(CombinedUserPostModel::getUserId,
-				Collectors.collectingAndThen(Collectors.toList(), list -> {
-					list.sort(Comparator.comparingInt(CombinedUserPostModel::getPostId));
-					return list;
-				})));
+			// Calculate users without posts
+			int usersWithoutPosts = users.stream().filter(user -> {
+				return userPosts.stream().noneMatch(userPost -> userPost.user_id == user.id);
+			}).collect(Collectors.toList()).size();
 
-		// Calculate users without posts
-		int usersWithoutPosts = users.stream().filter(user -> {
-			return userPosts.stream().noneMatch(userPost -> userPost.user_id == user.id);
-		}).collect(Collectors.toList()).size();
+			// Calculate users with posts
+			int usersWithPosts = users.size() - usersWithoutPosts;
 
-		// Calculate users with posts
-		int usersWithPosts = users.size() - usersWithoutPosts;
+			// Calculate posts without users
+			int postsWithoutUsers = userPosts.stream().filter(userPost -> {
+				return !userMap.containsKey(userPost.user_id);
+			}).collect(Collectors.toList()).size();
 
-		// Calculate posts without users
-		int postsWithoutUsers = userPosts.stream().filter(userPost -> {
-			return !userMap.containsKey(userPost.user_id);
-		}).collect(Collectors.toList()).size();
+			Map responseMap = new HashMap();
+			responseMap.put("users", userMap);
+			responseMap.put("userPosts", userPostsPerUser);
+			responseMap.put("usersWithoutPosts", usersWithoutPosts);
+			responseMap.put("usersWithPosts", usersWithPosts);
+			responseMap.put("postsWithoutUsers", postsWithoutUsers);
+			responseMap.put("totalUsers", users.size());
+			responseMap.put("totalUserPosts", userPosts.size());
+			return gson.toJson(responseMap);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WebApplicationException(e.getLocalizedMessage(), 500);
+		}
 
-		Map responseMap = new HashMap();
-		responseMap.put("userPosts", userPostsPerUser);
-		responseMap.put("usersWithoutPosts", usersWithoutPosts);
-		responseMap.put("usersWithPosts", usersWithPosts);
-		responseMap.put("postsWithoutUsers", postsWithoutUsers);
-
-		return gson.toJson(responseMap);
 	}
 
 }
