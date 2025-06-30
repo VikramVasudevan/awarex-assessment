@@ -1,0 +1,196 @@
+{
+	"info": {
+		"_postman_id": "ffc32481-d454-4c47-8f51-f26e3b5c5607",
+		"name": "Awarex-API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13903683"
+	},
+	"item": [
+		{
+			"name": "GOREST-Backend-APIs",
+			"item": [
+				{
+					"name": "User Posts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer 5d62122e774bf830b0b3bd4e1cff2f33d7d94926e62553f95c00ca72b20c3112",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://gorest.co.in/public/v2/posts",
+							"protocol": "https",
+							"host": [
+								"gorest",
+								"co",
+								"in"
+							],
+							"path": [
+								"public",
+								"v2",
+								"posts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer 5d62122e774bf830b0b3bd4e1cff2f33d7d94926e62553f95c00ca72b20c3112",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://gorest.co.in/public/v2/users?email=agnivesh_chaturvedi@witting-huels.test",
+							"protocol": "https",
+							"host": [
+								"gorest",
+								"co",
+								"in"
+							],
+							"path": [
+								"public",
+								"v2",
+								"users"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "agnivesh_chaturvedi@witting-huels.test"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "getUserPostDetails",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/awarex/api/v1/userposts/getUserPostDetails",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"awarex",
+						"api",
+						"v1",
+						"userposts",
+						"getUserPostDetails"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create post (non existent user)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"name\": \"User Test\",\r\n\"gender\": \"male\",\r\n\"email\": \"test.this5@mailinator.com\",\r\n\"title\": \"Some title\",\r\n\"body\": \"Some text\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/awarex/api/v1/userposts/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"awarex",
+						"api",
+						"v1",
+						"userposts",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create post (existing user)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"name\": \"User Test\",\r\n\"gender\": \"male\",\r\n\"email\": \"agnivesh_chaturvedi@witting-huels.test\",\r\n\"title\": \"Some title 001\",\r\n\"body\": \"Some text 001\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/awarex/api/v1/userposts/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"awarex",
+						"api",
+						"v1",
+						"userposts",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create post (existing user) - with errors",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"name\": \"User Test\",\r\n\"gender\": \"male\",\r\n\"email\": \"test002@ekahaa.com\",\r\n\"title\": \"Some title 001\",\r\n\"body\": \"Some text 001\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/awarex/api/v1/userposts/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"awarex",
+						"api",
+						"v1",
+						"userposts",
+						"create"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
