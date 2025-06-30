@@ -5,6 +5,15 @@ import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(description = "This is the request payload for writeAPost API.", value = "User Post Payload")
 public class UserPostPayload {
+	public UserPostPayload(String name, String email, String gender, String title, String body) {
+		super();
+		this.name = name;
+		this.email = email;
+		this.gender = gender;
+		this.title = title;
+		this.body = body;
+	}
+
 	@ApiModelProperty(example = "Vikram Vasudevan", dataType = "String", required = true)
 	public String name;
 	@ApiModelProperty(example = "Vikram.Vasudevan@ekahaa.com", dataType = "String", required = true)
