@@ -26,6 +26,7 @@ import com.awarex.api.common.AwarexAPIException;
 import com.awarex.api.common.AwarexEnvironment;
 import com.awarex.api.common.RestAPIHelper;
 import com.awarex.api.model.CombinedUserPostModel;
+import com.awarex.api.model.ResponseErrorModel;
 import com.awarex.api.model.User;
 import com.awarex.api.model.UserPost;
 import com.awarex.api.model.UserPostDetailsModel;
@@ -68,6 +69,12 @@ public class UserPostManagerService {
 	String usersAPIUrl = AwarexEnvironment.getInstance().backendAPIBaseURI + "users";
 	String userPostsAPIUrl = AwarexEnvironment.getInstance().backendAPIBaseURI + "posts";
 
+	@ApiOperation(value = "Create new post", notes = "Create a new post. If user email exists, use the existing user id, else create the new user and use that id.", response = UserPostDetailsModel.class, produces = "application/json", consumes = "application/json")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Successfully processed", response = UserPostDetailsModel.class),
+			@ApiResponse(code = 422, message = "Unprocessable Entity", response = ResponseErrorModel.class),
+			@ApiResponse(code = 400, message = "Invalid parameters supplied"),
+			@ApiResponse(code = 401, message = "Not authorized") })
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
