@@ -1,7 +1,6 @@
 package com.awarex.api.userposts;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -29,10 +28,31 @@ import com.awarex.api.common.RestAPIHelper;
 import com.awarex.api.model.CombinedUserPostModel;
 import com.awarex.api.model.User;
 import com.awarex.api.model.UserPost;
+import com.awarex.api.model.UserPostDetailsModel;
 import com.awarex.api.model.UserPostPayload;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiKeyAuthDefinition;
+import io.swagger.annotations.ApiKeyAuthDefinition.ApiKeyLocation;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Contact;
+import io.swagger.annotations.ExternalDocs;
+import io.swagger.annotations.Info;
+import io.swagger.annotations.License;
+import io.swagger.annotations.SecurityDefinition;
+import io.swagger.annotations.SwaggerDefinition;
+import io.swagger.annotations.Tag;
+
+@SwaggerDefinition(info = @Info(title = "Awarex APIs", description = "APIS to manage user posts", termsOfService = "terms.html", contact = @Contact(name = "Awarex Tech Support", email = "support@awarex.com", url = "https://awarex.com"), version = "V1", license = @License(name = "Apache 2.0", url = "http://www.apache.org/licenses/LICENSE-2.0")), produces = {
+		"application/json",
+		"text/xml" }, schemes = { SwaggerDefinition.Scheme.HTTP, SwaggerDefinition.Scheme.HTTPS }, tags = {
+				@Tag(name = "User Posts", description = "Get and post data using GOREST Backend API") }, externalDocs = @ExternalDocs(value = "About Awarex", url = "https://awarex.com"), securityDefinition = @SecurityDefinition(apiKeyAuthDefinitions = {
+						@ApiKeyAuthDefinition(in = ApiKeyLocation.HEADER, description = "Authentication using bearer token", name = "Authorization", key = "Bearer") }))
+@Api(value = "/userposts", tags = "User Posts")
 @Path("/userposts")
 public class UserPostManagerService {
 	Type userType = new TypeToken<User>() {
@@ -116,6 +136,11 @@ public class UserPostManagerService {
 //		}
 //	}
 
+	@ApiOperation(value = "Get User Post Details", notes = "Fetch user posts organized by userid. Provide additionl data quality insights such as users with posts, users without posts, posts without users.", response = UserPostDetailsModel.class, produces = "application/json")
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Successfully processed", response = UserPostDetailsModel.class),
+			@ApiResponse(code = 400, message = "Invalid parameters supplied"),
+			@ApiResponse(code = 404, message = "No data found"), @ApiResponse(code = 401, message = "Not authorized") })
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("getUserPostDetails")
