@@ -11,3 +11,6 @@ Further `src/test/resources/Awarex-API.postman_collection.json` contains all the
 
 ### Performance Testing
 Classes `TestCreateUserPost` and `TestGetUserPostDetails` under `src/test/java` package are used to test the performance of the APIs
+
+### Assumptions
+- The GoREST backend APIs are paginated by nature. But in this example, I have assumed they are not for simplicity's sake. If we need to get all data at once, we need to iteratively invoke the same API multiple times which wouldn't be ideal. This would impact stats like posts without users or users without posts.
