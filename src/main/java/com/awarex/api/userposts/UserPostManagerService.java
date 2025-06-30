@@ -54,7 +54,7 @@ import io.swagger.annotations.Tag;
 				@Tag(name = "User Posts", description = "Get and post data using GOREST Backend API") }, externalDocs = @ExternalDocs(value = "About Awarex", url = "https://awarex.com"), securityDefinition = @SecurityDefinition(apiKeyAuthDefinitions = {
 						@ApiKeyAuthDefinition(in = ApiKeyLocation.HEADER, description = "Authentication using bearer token", name = "Authorization", key = "Bearer") }))
 @Api(value = "/userposts", tags = "User Posts")
-@Path("/userposts")
+@Path("/v1/userposts")
 public class UserPostManagerService {
 	Type userType = new TypeToken<User>() {
 	}.getType();
@@ -69,7 +69,7 @@ public class UserPostManagerService {
 	String usersAPIUrl = AwarexEnvironment.getInstance().backendAPIBaseURI + "users";
 	String userPostsAPIUrl = AwarexEnvironment.getInstance().backendAPIBaseURI + "posts";
 
-	@ApiOperation(value = "Create new post", notes = "Create a new post. If user email exists, use the existing user id, else create the new user and use that id.", response = UserPostDetailsModel.class, produces = "application/json", consumes = "application/json")
+	@ApiOperation(value = "Create new post", notes = "Create a new post. If the provided user email exists, use it else create a new user with the provided details and use that id for posting.", response = UserPostDetailsModel.class, produces = "application/json", consumes = "application/json")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Successfully processed", response = UserPostDetailsModel.class),
 			@ApiResponse(code = 422, message = "Unprocessable Entity", response = ResponseErrorModel.class),
