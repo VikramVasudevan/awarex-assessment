@@ -14,3 +14,12 @@ Classes `TestCreateUserPost` and `TestGetUserPostDetails` under `src/test/java` 
 
 ### Assumptions
 - The GoREST backend APIs are paginated by nature. But in this example, I have assumed they are not for simplicity's sake. If we need to get all data at once, we need to iteratively invoke the same API multiple times which wouldn't be ideal. This would impact stats like posts without users or users without posts.
+
+### Server Startup
+- Generate a war file from Eclipse.
+- Deploy the war file in an application server like Tomcat
+- Setup the following environment variables before starting tomcat server
+  - GOREST_ACCESS_TOKEN=<<<<<<YOUR ACCESS TOKEN HERE>>>>>>>
+  - GOREST_API_BASE_URI=https://gorest.co.in/public/v2/
+- Start tomcat server
+- Access the application at http://localhost:8080/awarex
